@@ -1,0 +1,61 @@
+// HelloWorldCom.idl : IDL source for HelloWorldCom
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (HelloWorldCom.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(a817e7a2-43fa-11d0-9e44-00aa00b6770a),
+	dual,
+	pointer_default(unique)
+]
+interface IComponentRegistrar : IDispatch
+{
+	[id(1)]	HRESULT Attach([in] BSTR bstrPath);
+	[id(2)]	HRESULT RegisterAll();
+	[id(3)]	HRESULT UnregisterAll();
+	[id(4)]	HRESULT GetComponents([out] SAFEARRAY(BSTR)* pbstrCLSIDs, [out] SAFEARRAY(BSTR)* pbstrDescriptions);
+	[id(5)]	HRESULT RegisterComponent([in] BSTR bstrCLSID);
+	[id(6)] HRESULT UnregisterComponent([in] BSTR bstrCLSID);
+};
+
+[
+	object,
+	uuid(ad103ffc-d76c-4a69-ad9a-645dff55b240),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface IHelloWorld : IDispatch
+{
+		[id(1)] HRESULT Start([in] BSTR name, [out, retval] BSTR* result);
+};
+[
+	uuid(b4dc28cc-1430-457c-8e67-616712e1db0a),
+	version(1.0),
+	custom(a817e7a1-43fa-11d0-9e44-00aa00b6770a,"{ffae472e-986e-4449-b730-35deb0b2c0f4}")
+]
+library HelloWorldComLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(ffae472e-986e-4449-b730-35deb0b2c0f4)
+	]
+	coclass CompReg
+	{
+		[default] interface IComponentRegistrar;
+	};
+	[
+		uuid(7139a489-66eb-4cf1-b1b9-62f3dbfb373e)
+	]
+	coclass HelloWorld
+	{
+		[default] interface IHelloWorld;
+	};
+};
+
+import "shobjidl.idl";
