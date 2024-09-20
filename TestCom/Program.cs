@@ -3,45 +3,119 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace TestCom
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace HelloWorldComTest
 {
-    class Program
+    internal class Program
     {
         static void Main(string[] args)
         {
+            string res = "4";
+
+            var executeWrapper = new ComExecuteWrapper();
+
+            executeWrapper.AddParameter("Jakob");
+            res = executeWrapper.ExecuteMethod("HelloWorld", "Start");
+
+            if (res == null)
+            {
+                Console.WriteLine("Error: Method call failed.");
+                return;
+            }
+            else
+                Console.WriteLine(res);
+        }
+    }
+
+    internal sealed class ComExecuteWrapper
+    {
+        private readonly List<object> mArguments = new List<object>();
+        private object mComComponent;
+        private Type mComType;
+        private string mProgId = "";
+
+        public void AddParameter(object parameter) => this.mArguments.Add(parameter);
+
+        public string ExecuteMethod(string progId, string method)
+        {
             try
             {
-                // Instantiate the COM object using the ProgID
-                Type comType = Type.GetTypeFromProgID("HelloWorld");
-
-                if (comType != null)
+                // Check if we are using the same ProgID, otherwise create a new COM object
+                if (this.mProgId != progId)
                 {
-                    // Create an instance of the COM object
-                    dynamic comObject = Activator.CreateInstance(comType);
+                    this.mComType = Type.GetTypeFromProgID(progId);
+                    if (this.mComType == null)
+                        throw new Exception($"Could not find COM type for ProgID [{progId}].");
 
-                    // Call the Start method and pass the name parameter
-                    string name = "Jakob";  // Replace with the actual name you want to pass
-                    string result = comObject.Start(name);  // Store the returned string (BSTR)
+                    this.mComComponent = Activator.CreateInstance(this.mComType);
+                    if (this.mComComponent == null)
+                        throw new Exception($"Could not create instance of COM component for ProgID '{progId}'.");
 
-                    // Print the result
-                    Console.WriteLine("Result from COM: " + result);
-
-                    // Release the COM object when done
-                    Marshal.ReleaseComObject(comObject);
-                    comObject = null;
+                    this.mProgId = progId;
                 }
-                else
-                {
-                    Console.WriteLine("COM object not found.");
-                }
+
+                // Convert arguments to array
+                var arguments = this.mArguments.ToArray();
+
+                // Invoke the method and return the result
+                var result = this.mComType.InvokeMember(method, BindingFlags.InvokeMethod, null, this.mComComponent, arguments);
+                return result?.ToString();
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: " + ex.Message);
+                Console.WriteLine($"Error executing COM method: {ex.Message}");
+                return null;
             }
-
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
         }
     }
 }
+
+
+//namespace TestCom
+//{
+//    class Program
+//    {
+//        static void Main(string[] args)
+//        {
+//            try
+//            {
+//                // Instantiate the COM object using the ProgID
+//                Type comType = Type.GetTypeFromProgID("HelloWorld");
+
+//                if (comType != null)
+//                {
+//                    // Create an instance of the COM object
+//                    dynamic comObject = Activator.CreateInstance(comType);
+
+//                    // Call the Start method and pass the name parameter
+//                    string name = "Jakob";  // Replace with the actual name you want to pass
+//                    string result = comObject.Start(name);  // Store the returned string (BSTR)
+
+//                    // Print the result
+//                    Console.WriteLine("Result from COM: " + result);
+
+//                    // Release the COM object when done
+//                    Marshal.ReleaseComObject(comObject);
+//                    comObject = null;
+//                }
+//                else
+//                {
+//                    Console.WriteLine("COM object not found.");
+//                }
+//            }
+//            catch (Exception ex)
+//            {
+//                Console.WriteLine("Error: " + ex.Message);
+//            }
+
+//            Console.WriteLine("Press any key to exit...");
+//            Console.ReadKey();
+//        }
+//    }
+//}
